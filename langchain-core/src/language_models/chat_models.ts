@@ -353,6 +353,19 @@ export abstract class BaseChatModel<
         );
         throw err;
       }
+      // --- START: MANUAL PATCH: AGENT TOKEN DOUBLING FIX---
+      if (
+        generationChunk?.message?.usage_metadata &&
+        llmOutput?.tokenUsage
+      ) {
+        generationChunk.message.usage_metadata.input_tokens =
+          llmOutput.tokenUsage.promptTokens;
+        generationChunk.message.usage_metadata.output_tokens =
+          llmOutput.tokenUsage.completionTokens;
+        generationChunk.message.usage_metadata.total_tokens =
+          llmOutput.tokenUsage.totalTokens;
+      }
+      // --- END: MANUAL PATCH: AGENT TOKEN DOUBLING FIX---
       await Promise.all(
         (runManagers ?? []).map((runManager) =>
           runManager?.handleLLMEnd({
